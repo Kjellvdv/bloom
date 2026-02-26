@@ -14,10 +14,17 @@ let setupComplete = false;
 async function checkIfTablesExist(): Promise<boolean> {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
+    console.log('⚠️  DATABASE_URL not set');
     return false;
   }
 
-  const pool = new Pool({ connectionString });
+  console.log('🔗 Connecting to database...');
+
+  const pool = new Pool({
+    connectionString,
+    // Force IPv4 to avoid IPv6 localhost issues
+    host: new URL(connectionString).hostname,
+  });
 
   try {
     const result = await pool.query(`
@@ -27,9 +34,10 @@ async function checkIfTablesExist(): Promise<boolean> {
         AND table_name = 'users'
       );
     `);
+    console.log('✅ Database connection successful');
     return result.rows[0].exists;
   } catch (error) {
-    console.error('Error checking tables:', error);
+    console.error('❌ Error checking tables:', error);
     return false;
   } finally {
     await pool.end();
@@ -57,12 +65,14 @@ export async function ensureDbSetup() {
 
     // Run migrations
     console.log('Creating tables...');
-    await execAsync('npx drizzle-kit push');
+    const { stdout: pushStdout, stderr: pushStderr } = await execAsync('npx drizzle-kit push:pg');
+    if (pushStderr) console.log('drizzle-kit output:', pushStderr);
     console.log('✅ Tables created');
 
     // Run seeds
     console.log('🌱 Loading seed data...');
-    await execAsync('tsx server/seeds/initial-levels.ts');
+    const { stdout: seedStdout, stderr: seedStderr } = await execAsync('npx tsx server/seeds/initial-levels.ts');
+    if (seedStderr) console.log('seed output:', seedStderr);
     console.log('✅ Seed data loaded');
 
     setupComplete = true;
