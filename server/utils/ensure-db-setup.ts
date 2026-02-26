@@ -72,8 +72,9 @@ export async function ensureDbSetup() {
 
     // Run migrations
     console.log('Creating tables...');
-    const { stdout: pushStdout, stderr: pushStderr } = await execAsync('npx drizzle-kit push:pg');
-    if (pushStderr) console.log('drizzle-kit output:', pushStderr);
+    const { stdout: pushStdout, stderr: pushStderr } = await execAsync('npx drizzle-kit push');
+    console.log('Migration output:', pushStdout);
+    if (pushStderr) console.log('Migration stderr:', pushStderr);
     console.log('✅ Tables created');
 
     // Run seeds
