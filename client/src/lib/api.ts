@@ -1,6 +1,6 @@
 import type { SafeUser } from '@shared/schema';
 
-const API_BASE = (import.meta as any).env?.PROD ? '/api' : 'http://localhost:3000/api';
+const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
 
 interface ApiResponse<T> {
   success: boolean;
