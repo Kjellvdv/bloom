@@ -1,8 +1,5 @@
 import type { SafeUser } from '@shared/schema';
 
-// Use relative URL in production, localhost in development
-const API_BASE = import.meta.env.DEV ? 'http://localhost:3000/api' : '/api';
-
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -15,7 +12,7 @@ async function apiCall<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const response = await fetch(`/api${endpoint}`, {
     ...options,
     credentials: 'include',
     headers: {
