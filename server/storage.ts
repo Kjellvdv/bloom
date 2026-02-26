@@ -543,5 +543,19 @@ export class DbStorage implements IStorage {
   }
 }
 
-// Export singleton instance
-export const storage: IStorage = new DbStorage();
+// Lazy initialization of storage to avoid connecting during build time
+let storageInstance: IStorage | null = null;
+
+function getStorage(): IStorage {
+  if (!storageInstance) {
+    storageInstance = new DbStorage();
+  }
+  return storageInstance;
+}
+
+// Export singleton instance with lazy initialization
+export const storage: IStorage = new Proxy({} as IStorage, {
+  get(_target, prop) {
+    return (getStorage() as any)[prop];
+  }
+});
