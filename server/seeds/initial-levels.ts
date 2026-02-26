@@ -495,11 +495,18 @@ const seedData = [
 
 async function seed() {
   console.log('🌱 Starting database seeding...');
+  console.log('🔗 DATABASE_URL:', DATABASE_URL ? 'Set' : 'Missing');
 
   try {
-    // Create tables if they don't exist
-    console.log('📊 Creating database tables...');
+    // Test database connection
+    console.log('🔍 Testing database connection...');
+    await db.execute(sql`SELECT 1`);
+    console.log('✅ Database connected successfully');
 
+    // Tables already created via db:push, skip table creation
+    console.log('📊 Tables should already exist from db:push');
+
+    /*
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -623,8 +630,9 @@ async function seed() {
         expire TIMESTAMP(6) NOT NULL
       );
     `);
+    */
 
-    console.log('✅ Tables created');
+    console.log('✅ Skipping table creation (already exist)');
 
     let previousLevelId: number | undefined = undefined;
 
@@ -668,17 +676,15 @@ async function seed() {
   }
 }
 
-// Run seed if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  seed()
-    .then(() => {
-      console.log('✅ Seed completed');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('❌ Seed failed:', error);
-      process.exit(1);
-    });
-}
+// Run seed (always run when this file is executed)
+seed()
+  .then(() => {
+    console.log('✅ Seed completed');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('❌ Seed failed:', error);
+    process.exit(1);
+  });
 
 export { seed };
