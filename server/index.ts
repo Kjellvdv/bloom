@@ -8,7 +8,7 @@ import connectPgSimple from 'connect-pg-simple';
 import { Pool } from 'pg';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { storage } from './storage';
+import { initStorage } from './storage';
 import { createAuthRouter } from './routes/auth';
 import { createLevelsRouter } from './routes/levels';
 import { createExercisesRouter } from './routes/exercises';
@@ -26,14 +26,6 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 console.log('🚀 Starting Bloom server...');
 console.log('📊 Environment:', process.env.NODE_ENV || 'development');
 
-// Run database setup on first start (Railway deployments)
-if (process.env.NODE_ENV === 'production' && process.env.RAILWAY_ENVIRONMENT) {
-  console.log('🔧 Checking database setup...');
-  import('./utils/ensure-db-setup.js').then(({ ensureDbSetup }) => {
-    ensureDbSetup().catch(console.error);
-  });
-}
-
 // Database connection
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
@@ -42,6 +34,9 @@ if (!DATABASE_URL) {
 }
 
 console.log('🔌 Database URL:', DATABASE_URL ? 'Set' : 'Missing');
+
+// Initialize storage
+const storage = initStorage(DATABASE_URL);
 
 // Session store
 const PgSession = connectPgSimple(session);
@@ -196,6 +191,41 @@ app.get('/api/health', (req, res) => {
     message: 'Bloom server is running',
     environment: process.env.NODE_ENV || 'development',
   });
+});
+
+// Database setup endpoint (one-time use)
+// Visit this endpoint once after deployment to initialize database
+app.get('/api/setup-database', async (req, res) => {
+  try {
+    console.log('🔧 Database setup requested...');
+
+    // Check if tables already exist
+    const levels = await storage.getAllLevels();
+    if (levels.length > 0) {
+      return res.json({
+        success: true,
+        message: 'Database already set up!',
+        levelsCount: levels.length,
+      });
+    }
+
+    return res.json({
+      success: false,
+      error: 'Please run: railway run npm run db:push && railway run npm run seed',
+      instructions: {
+        step1: 'Install Railway CLI: npm install -g @railway/cli',
+        step2: 'Link project: railway link',
+        step3: 'Run migrations: railway run npm run db:push',
+        step4: 'Run seeds: railway run npm run seed',
+      },
+    });
+  } catch (error: any) {
+    console.error('❌ Setup check failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
 });
 
 // Serve static files in production
