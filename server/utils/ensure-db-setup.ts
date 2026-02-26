@@ -18,13 +18,20 @@ async function checkIfTablesExist(): Promise<boolean> {
     return false;
   }
 
-  console.log('🔗 Connecting to database...');
+  // Debug: show connection details (without password)
+  try {
+    const url = new URL(connectionString);
+    console.log('🔗 Connecting to database:', {
+      protocol: url.protocol,
+      hostname: url.hostname,
+      port: url.port,
+      database: url.pathname.slice(1),
+    });
+  } catch (e) {
+    console.log('⚠️  Could not parse DATABASE_URL');
+  }
 
-  const pool = new Pool({
-    connectionString,
-    // Force IPv4 to avoid IPv6 localhost issues
-    host: new URL(connectionString).hostname,
-  });
+  const pool = new Pool({ connectionString });
 
   try {
     const result = await pool.query(`
