@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { sql } from 'drizzle-orm';
 import { skillLevels, exercises } from '../../shared/schema';
 
 // Initialize database connection
@@ -496,6 +497,135 @@ async function seed() {
   console.log('🌱 Starting database seeding...');
 
   try {
+    // Create tables if they don't exist
+    console.log('📊 Creating database tables...');
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        native_language TEXT NOT NULL DEFAULT 'es',
+        target_language TEXT NOT NULL DEFAULT 'en',
+        profile_image TEXT,
+        reminder_enabled BOOLEAN NOT NULL DEFAULT true,
+        reminder_time TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        deleted_at TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "skillLevels" (
+        id SERIAL PRIMARY KEY,
+        level_number INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        title_es TEXT NOT NULL,
+        description TEXT NOT NULL,
+        description_es TEXT NOT NULL,
+        skill_type TEXT NOT NULL,
+        difficulty TEXT NOT NULL,
+        prerequisite_level_id INTEGER REFERENCES "skillLevels"(id),
+        reward_flower_type TEXT NOT NULL,
+        reward_tool_type TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        deleted_at TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS exercises (
+        id SERIAL PRIMARY KEY,
+        skill_level_id INTEGER NOT NULL REFERENCES "skillLevels"(id),
+        order_index INTEGER NOT NULL,
+        exercise_type TEXT NOT NULL,
+        prompt_text TEXT NOT NULL,
+        prompt_text_es TEXT NOT NULL,
+        prompt_audio_url TEXT,
+        expected_text TEXT,
+        correct_answers JSONB,
+        hint_text TEXT,
+        hint_text_es TEXT,
+        success_message_es TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        deleted_at TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "userProgress" (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        skill_level_id INTEGER NOT NULL REFERENCES "skillLevels"(id),
+        status TEXT NOT NULL,
+        current_exercise_index INTEGER NOT NULL,
+        completion_percentage REAL NOT NULL,
+        total_attempts INTEGER NOT NULL,
+        correct_attempts INTEGER NOT NULL,
+        average_accuracy REAL NOT NULL,
+        started_at TIMESTAMP,
+        completed_at TIMESTAMP,
+        last_accessed_at TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        deleted_at TIMESTAMP,
+        UNIQUE(user_id, skill_level_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS "exerciseAttempts" (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        exercise_id INTEGER NOT NULL REFERENCES exercises(id),
+        user_response TEXT NOT NULL,
+        audio_recording_url TEXT,
+        is_correct BOOLEAN NOT NULL,
+        accuracy_score REAL NOT NULL,
+        attempt_duration INTEGER,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS "userGarden" (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
+        garden_theme TEXT NOT NULL,
+        total_flowers INTEGER NOT NULL,
+        total_watering_sessions INTEGER NOT NULL,
+        garden_level INTEGER NOT NULL,
+        plant_positions JSONB NOT NULL,
+        unlocked_tools JSONB NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        deleted_at TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "gardenMessages" (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        message_type TEXT NOT NULL,
+        message_text_es TEXT NOT NULL,
+        trigger_condition TEXT NOT NULL,
+        is_read BOOLEAN NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS "userStreaks" (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
+        current_streak INTEGER NOT NULL,
+        longest_streak INTEGER NOT NULL,
+        last_session_date DATE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        deleted_at TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS session (
+        sid VARCHAR NOT NULL COLLATE "default",
+        sess JSON NOT NULL,
+        expire TIMESTAMP(6) NOT NULL
+      );
+    `);
+
+    console.log('✅ Tables created');
+
     let previousLevelId: number | undefined = undefined;
 
     for (const { level, exercises: exerciseData } of seedData) {
