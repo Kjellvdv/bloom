@@ -26,6 +26,14 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 console.log('🚀 Starting Bloom server...');
 console.log('📊 Environment:', process.env.NODE_ENV || 'development');
 
+// Run database setup on first start (Railway deployments)
+if (process.env.NODE_ENV === 'production' && process.env.RAILWAY_ENVIRONMENT) {
+  console.log('🔧 Checking database setup...');
+  import('./utils/ensure-db-setup.js').then(({ ensureDbSetup }) => {
+    ensureDbSetup().catch(console.error);
+  });
+}
+
 // Database connection
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
