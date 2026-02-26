@@ -46,7 +46,7 @@ const sessionStore = new PgSession({
 // CORS configuration
 const corsOrigin =
   process.env.NODE_ENV === 'production'
-    ? process.env.CLIENT_URL || 'https://bloom-app.com'
+    ? process.env.CLIENT_URL || true // Allow same-origin in production
     : 'http://localhost:5173';
 
 console.log('🌐 CORS origin:', corsOrigin);
