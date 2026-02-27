@@ -35,14 +35,12 @@ export function ExercisePage() {
   const handleVoiceComplete = async (result: { transcript: string; audioBlob?: Blob }) => {
     if (!currentExercise) return;
 
-    const startTime = Date.now();
-
     try {
       const response: any = await submitAttempt.mutateAsync({
         exerciseId: currentExercise.id,
         data: {
           userResponse: result.transcript,
-          attemptDuration: Date.now() - startTime,
+          // Don't send attemptDuration for now - it's optional
         },
       });
 
@@ -62,14 +60,12 @@ export function ExercisePage() {
 
     if (!currentExercise || !spellingAnswer.trim()) return;
 
-    const startTime = Date.now();
-
     try {
       const response: any = await submitAttempt.mutateAsync({
         exerciseId: currentExercise.id,
         data: {
           userResponse: spellingAnswer.trim(),
-          attemptDuration: Date.now() - startTime,
+          // Don't send attemptDuration for now - it's optional
         },
       });
 
