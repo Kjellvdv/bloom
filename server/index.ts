@@ -80,13 +80,14 @@ app.use(
   session({
     store: sessionStore,
     secret: sessionSecret,
-    resave: false,
+    resave: true, // Force session save
     saveUninitialized: false,
+    proxy: true, // Trust Railway's proxy - CRITICAL for custom domains
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', // Use lax for better compatibility with custom domains
+      sameSite: 'lax',
     },
   })
 );
