@@ -45,9 +45,9 @@ export function ExercisePage() {
       });
 
       setFeedback({
-        message: response.data.feedback,
-        isCorrect: response.data.isCorrect,
-        accuracyScore: response.data.accuracyScore,
+        message: response.feedback,
+        isCorrect: response.isCorrect,
+        accuracyScore: response.accuracyScore,
       });
       setShowNextButton(true);
     } catch (error: any) {
@@ -70,9 +70,9 @@ export function ExercisePage() {
       });
 
       setFeedback({
-        message: response.data.feedback,
-        isCorrect: response.data.isCorrect,
-        accuracyScore: response.data.accuracyScore,
+        message: response.feedback,
+        isCorrect: response.isCorrect,
+        accuracyScore: response.accuracyScore,
       });
       setShowNextButton(true);
     } catch (error: any) {
