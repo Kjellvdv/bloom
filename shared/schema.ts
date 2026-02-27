@@ -140,7 +140,7 @@ export const exercises = pgTable('exercises', {
 export const insertExerciseSchema = createInsertSchema(exercises, {
   skillLevelId: z.number().int().positive(),
   orderIndex: z.number().int().nonnegative(),
-  exerciseType: z.enum(['voice_repeat', 'voice_answer', 'spelling', 'listening_comprehension']),
+  exerciseType: z.enum(['voice_repeat', 'voice_answer', 'spelling', 'listening_comprehension', 'translation']),
   promptText: z.string().min(1),
   promptTextEs: z.string().min(1),
   correctAnswers: z.array(z.string()).optional(),

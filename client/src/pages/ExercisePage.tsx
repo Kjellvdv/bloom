@@ -19,6 +19,7 @@ export function ExercisePage() {
     message: string;
     isCorrect: boolean;
     accuracyScore?: number;
+    userResponse?: string;
   } | null>(null);
   const [showNextButton, setShowNextButton] = useState(false);
 
@@ -73,6 +74,7 @@ export function ExercisePage() {
         message: response.feedback,
         isCorrect: response.isCorrect,
         accuracyScore: response.accuracyScore,
+        userResponse: spellingAnswer.trim(),
       });
       setShowNextButton(true);
     } catch (error: any) {
@@ -127,6 +129,8 @@ export function ExercisePage() {
     currentExercise.exerciseType === 'voice_repeat' ||
     currentExercise.exerciseType === 'voice_answer';
   const isSpellingExercise = currentExercise.exerciseType === 'spelling';
+  const isTranslationExercise = currentExercise.exerciseType === 'translation';
+  const isTextExercise = isSpellingExercise || isTranslationExercise;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-garden-sky to-background">
@@ -174,20 +178,27 @@ export function ExercisePage() {
               />
             )}
 
-            {/* Spelling Exercise */}
-            {isSpellingExercise && !showNextButton && (
+            {/* Text Exercise (Spelling or Translation) */}
+            {isTextExercise && !showNextButton && (
               <form onSubmit={handleSpellingSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="spelling" className="block text-sm font-medium mb-2">
-                    Escribe tu respuesta:
+                    {isTranslationExercise ? 'Traduce al inglés:' : 'Escribe tu respuesta:'}
                   </label>
+                  {isTranslationExercise && (
+                    <div className="mb-3 p-4 bg-accent/50 rounded-lg">
+                      <p className="text-xl font-medium text-center">
+                        {currentExercise.promptTextEs}
+                      </p>
+                    </div>
+                  )}
                   <input
                     id="spelling"
                     type="text"
                     value={spellingAnswer}
                     onChange={(e) => setSpellingAnswer(e.target.value)}
                     className="w-full px-4 py-3 border border-input rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Escribe aquí..."
+                    placeholder={isTranslationExercise ? 'Escribe la traducción...' : 'Escribe aquí...'}
                     autoFocus
                     disabled={submitAttempt.isPending}
                   />
@@ -237,7 +248,32 @@ export function ExercisePage() {
                     <p className="font-medium text-lg mb-1">
                       {feedback.isCorrect ? '¡Correcto!' : 'Inténtalo de nuevo'}
                     </p>
-                    <p className="text-sm">{feedback.message}</p>
+                    <p className="text-sm mb-3">{feedback.message}</p>
+
+                    {/* Show what user said/wrote */}
+                    {feedback.userResponse && (
+                      <div className="text-sm mb-2">
+                        <span className="font-medium">Tu respuesta:</span>{' '}
+                        <span className="text-muted-foreground">&quot;{feedback.userResponse}&quot;</span>
+                      </div>
+                    )}
+
+                    {/* Show expected answer if incorrect */}
+                    {!feedback.isCorrect && currentExercise.expectedText && (
+                      <div className="text-sm mb-2">
+                        <span className="font-medium">Respuesta correcta:</span>{' '}
+                        <span className="text-primary">&quot;{currentExercise.expectedText}&quot;</span>
+                      </div>
+                    )}
+
+                    {/* Show hint if available and incorrect */}
+                    {!feedback.isCorrect && currentExercise.hintTextEs && (
+                      <div className="text-sm mt-2 p-2 bg-muted/50 rounded">
+                        <span className="font-medium">💡 Pista:</span>{' '}
+                        {currentExercise.hintTextEs}
+                      </div>
+                    )}
+
                     {feedback.accuracyScore !== undefined && (
                       <p className="text-xs text-muted-foreground mt-2">
                         Precisión: {feedback.accuracyScore.toFixed(0)}%
@@ -248,13 +284,36 @@ export function ExercisePage() {
               </div>
             )}
 
-            {/* Next Button */}
+            {/* Action Buttons */}
             {showNextButton && (
-              <Button onClick={handleNext} className="w-full" size="lg">
-                {currentIndex < totalExercises - 1
-                  ? 'Siguiente Ejercicio →'
-                  : 'Finalizar Nivel 🎉'}
-              </Button>
+              <div className="flex gap-2">
+                {!feedback?.isCorrect && (
+                  <Button
+                    onClick={() => {
+                      setFeedback(null);
+                      setShowNextButton(false);
+                      setSpellingAnswer('');
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                    size="lg"
+                  >
+                    Intentar de nuevo
+                  </Button>
+                )}
+                <Button
+                  onClick={handleNext}
+                  className="flex-1"
+                  size="lg"
+                  variant={feedback?.isCorrect ? 'default' : 'outline'}
+                >
+                  {currentIndex < totalExercises - 1
+                    ? feedback?.isCorrect
+                      ? 'Siguiente Ejercicio →'
+                      : 'Saltar'
+                    : 'Finalizar Nivel 🎉'}
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>

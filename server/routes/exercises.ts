@@ -131,6 +131,31 @@ export function createExercisesRouter(storage: IStorage) {
           user: userText,
           isCorrect,
         });
+      } else if (exercise.exerciseType === 'translation') {
+        // Translation - check against expected text and correct answers
+        const expectedText = exercise.expectedText?.toLowerCase() || '';
+        const correctAnswers = exercise.correctAnswers || [];
+        const userText = userResponse.toLowerCase().trim();
+
+        // Check if matches expected text or any correct answer
+        isCorrect = userText === expectedText ||
+                    correctAnswers.some(answer => answer.toLowerCase() === userText);
+
+        // For close matches, calculate similarity
+        if (!isCorrect && expectedText) {
+          accuracyScore = calculateSimilarity(userText, expectedText);
+          isCorrect = accuracyScore >= 90; // Higher threshold for translations
+        } else {
+          accuracyScore = isCorrect ? 100 : 0;
+        }
+
+        console.log('🌐 Translation exercise evaluated:', {
+          expected: expectedText,
+          correctAnswers,
+          user: userText,
+          accuracy: accuracyScore,
+          isCorrect,
+        });
       }
 
       // Save attempt
