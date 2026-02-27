@@ -91,7 +91,7 @@ export function DashboardPage() {
 
         {/* Levels Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {(levels as any)?.data?.map((level: any) => {
+          {(levels as any)?.map((level: any) => {
             const progress = level.progress;
             const isUnlocked =
               !level.prerequisiteLevelId ||
@@ -177,7 +177,7 @@ export function DashboardPage() {
           })}
         </div>
 
-        {(levels as any)?.data?.length === 0 && (
+        {(levels as any)?.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
               No hay niveles disponibles aún.

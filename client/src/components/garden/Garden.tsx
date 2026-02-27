@@ -20,7 +20,7 @@ export function Garden() {
     );
   }
 
-  const gardenData = (garden as any)?.data;
+  const gardenData = garden as any;
   const totalFlowers = gardenData?.totalFlowers || 0;
   const totalSessions = gardenData?.totalWateringSessions || 0;
 

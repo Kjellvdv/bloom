@@ -6,7 +6,7 @@ export function GardenMessages() {
   const { data: messages, isLoading } = useGardenMessages();
   const markRead = useMarkMessageRead();
 
-  const unreadMessages = (messages as any)?.data || [];
+  const unreadMessages = (messages as any) || [];
 
   useEffect(() => {
     // Auto-mark first message as read after 5 seconds

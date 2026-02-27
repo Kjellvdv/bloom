@@ -20,7 +20,7 @@ export function ProgressPage() {
     );
   }
 
-  const statsData = (stats as any)?.data;
+  const statsData = stats as any;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-garden-sky to-background">

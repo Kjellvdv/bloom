@@ -22,8 +22,8 @@ export function ExercisePage() {
   } | null>(null);
   const [showNextButton, setShowNextButton] = useState(false);
 
-  const currentExercise = (exercises as any)?.data?.[currentIndex];
-  const totalExercises = (exercises as any)?.data?.length || 0;
+  const currentExercise = (exercises as any)?.[currentIndex];
+  const totalExercises = (exercises as any)?.length || 0;
 
   // Reset state when exercise changes
   useEffect(() => {
