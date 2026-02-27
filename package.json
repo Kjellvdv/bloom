@@ -17,6 +17,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "seed": "tsx server/seeds/initial-levels.ts",
+    "seed:fresh": "tsx server/seeds/initial-levels.ts --fresh",
     "setup:db": "tsx scripts/setup-db.ts"
   },
   "dependencies": {

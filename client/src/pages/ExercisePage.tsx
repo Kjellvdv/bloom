@@ -99,6 +99,17 @@ export function ExercisePage() {
     }
   };
 
+  const handleListen = () => {
+    if (!currentExercise || !currentExercise.promptText) return;
+
+    // Use Web Speech API to read the prompt
+    const utterance = new SpeechSynthesisUtterance(currentExercise.promptText);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9; // Slightly slower for learning
+    window.speechSynthesis.cancel(); // Cancel any ongoing speech
+    window.speechSynthesis.speak(utterance);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -163,10 +174,26 @@ export function ExercisePage() {
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">{currentExercise.promptText}</CardTitle>
-            <CardDescription className="text-lg">
-              {currentExercise.promptTextEs}
-            </CardDescription>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <CardTitle className="text-2xl">{currentExercise.promptText}</CardTitle>
+                <CardDescription className="text-lg">
+                  {currentExercise.promptTextEs}
+                </CardDescription>
+              </div>
+              {isVoiceExercise && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleListen}
+                  className="flex-shrink-0"
+                  title="Escuchar pronunciación"
+                >
+                  🔊
+                </Button>
+              )}
+            </div>
           </CardHeader>
 
           <CardContent className="space-y-6">

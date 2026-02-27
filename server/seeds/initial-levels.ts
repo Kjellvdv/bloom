@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
-import { skillLevels, exercises } from '../../shared/schema';
+import { skillLevels, exercises, exerciseAttempts, userProgress } from '../../shared/schema';
 
 // Initialize database connection
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -548,7 +548,12 @@ const seedData = [
 // ============================================================================
 
 async function seed() {
+  const isFresh = process.argv.includes('--fresh');
+
   console.log('🌱 Starting database seeding...');
+  if (isFresh) {
+    console.log('🔄 Fresh seed mode: will clear existing data');
+  }
   console.log('🔗 DATABASE_URL:', DATABASE_URL ? 'Set' : 'Missing');
 
   try {
@@ -688,6 +693,28 @@ async function seed() {
 
     console.log('✅ Skipping table creation (already exist)');
 
+    // Check if data already exists
+    const existingLevels = await db.select().from(skillLevels);
+
+    if (existingLevels.length > 0 && !isFresh) {
+      console.log(`\n⚠️  Found ${existingLevels.length} existing levels in database`);
+      console.log('To re-seed, you have two options:');
+      console.log('1. Run: npm run seed:fresh  (clears all data and re-seeds)');
+      console.log('2. Manually delete levels from database');
+      console.log('\n❌ Skipping seed to avoid duplicates');
+      return;
+    }
+
+    // Clear existing data if in fresh mode
+    if (isFresh && existingLevels.length > 0) {
+      console.log('🗑️  Clearing existing level data...');
+      await db.delete(exerciseAttempts);
+      await db.delete(exercises);
+      await db.delete(userProgress);
+      await db.delete(skillLevels);
+      console.log('✅ Existing data cleared');
+    }
+
     let previousLevelId: number | undefined = undefined;
 
     for (const { level, exercises: exerciseData } of seedData) {
@@ -718,10 +745,10 @@ async function seed() {
     console.log('\n🎉 Database seeding completed successfully!');
     console.log(`📊 Summary:`);
     console.log(`   - 3 skill levels created`);
-    console.log(`   - 41 exercises total (12 + 14 + 15)`);
+    console.log(`   - 46 exercises total (12 + 14 + 20)`);
     console.log(`   - Level 1: Greetings & Introductions (speaking)`);
     console.log(`   - Level 2: Daily Conversations (mixed)`);
-    console.log(`   - Level 3: Spelling & Writing (spelling)`);
+    console.log(`   - Level 3: Spelling & Writing (spelling + translation)`);
   } catch (error) {
     console.error('❌ Error seeding database:', error);
     throw error;

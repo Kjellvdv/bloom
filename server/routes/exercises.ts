@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import type { IStorage } from '../storage';
 import { requireAuth } from '../middleware/auth';
-import { calculateSimilarity, generateFeedbackMessage } from '../utils/helpers';
+import { calculateSimilarity, generateFeedbackMessage, normalizeNumbers } from '../utils/helpers';
 
 export function createExercisesRouter(storage: IStorage) {
   const router = Router();
@@ -90,16 +90,22 @@ export function createExercisesRouter(storage: IStorage) {
       let accuracyScore = 0;
 
       if (exercise.exerciseType === 'voice_repeat' || exercise.exerciseType === 'voice_answer') {
-        // Voice exercise - calculate similarity
+        // Voice exercise - calculate similarity with number normalization
         const expectedText = exercise.expectedText?.toLowerCase() || '';
         const userText = userResponse.toLowerCase();
 
-        accuracyScore = calculateSimilarity(userText, expectedText);
+        // Normalize numbers in both texts (e.g., "three" -> "3", "3" -> "3")
+        const normalizedExpected = normalizeNumbers(expectedText);
+        const normalizedUser = normalizeNumbers(userText);
+
+        accuracyScore = calculateSimilarity(normalizedUser, normalizedExpected);
         isCorrect = accuracyScore >= 80;
 
         console.log('🎤 Voice exercise evaluated:', {
           expected: expectedText,
           user: userText,
+          normalizedExpected,
+          normalizedUser,
           accuracy: accuracyScore,
           isCorrect,
         });
